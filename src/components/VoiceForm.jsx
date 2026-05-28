@@ -6,6 +6,8 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [step, setStep] = useState('title');
+  const [formError, setFormError] = useState('');
+  const [formStatus, setFormStatus] = useState('');
   const { isListening, transcript, error, success, startListening, stopListening, resetTranscript } = useVoice();
 
   useEffect(() => {
@@ -21,6 +23,12 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
       handleVoiceInput(transcript);
     }
   }, [transcript]);
+
+  useEffect(() => {
+    if (!formStatus) return undefined;
+    const timer = window.setTimeout(() => setFormStatus(''), 3200);
+    return () => window.clearTimeout(timer);
+  }, [formStatus]);
 
   const handleVoiceInput = (text) => {
     if (step === 'title') {
@@ -44,10 +52,11 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title.trim()) {
-      alert('Title is required');
+      setFormError('Title is required.');
       return;
     }
 
+    setFormError('');
     const itemData = {
       title: title.trim(),
       description: description.trim(),
@@ -57,8 +66,10 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
 
     if (editingItem) {
       onUpdateItem({ ...editingItem, ...itemData });
+      setFormStatus('Item updated successfully.');
     } else {
       onAddItem(itemData);
+      setFormStatus('Item added successfully.');
     }
 
     resetForm();
@@ -75,11 +86,11 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
   const getStepPrompt = () => {
     switch (step) {
       case 'title':
-        return 'Say the item title';
+        return 'Say the item title.';
       case 'description':
-        return 'Say the description (or skip)';
+        return 'Say the description, or continue typing.';
       case 'confirm':
-        return 'Ready to save?';
+        return 'Ready to save the item.';
       default:
         return '';
     }
@@ -87,8 +98,8 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
 
   return (
     <div className="voice-form-container">
-      <h2>{editingItem ? 'Edit Item' : 'Add New Item'}</h2>
-      
+      <h2>{editingItem ? 'Edit item' : 'Add new item'}</h2>
+
       <form onSubmit={handleSubmit} className="voice-form">
         <div className="form-group">
           <label htmlFor="title">Title *</label>
@@ -113,7 +124,6 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
           />
         </div>
 
-
         <div className="voice-control">
           <div className="step-indicator">{getStepPrompt()}</div>
           <button
@@ -121,16 +131,22 @@ const VoiceForm = ({ onAddItem, onUpdateItem, editingItem, onCancelEdit }) => {
             onClick={handleVoiceSubmit}
             className={`voice-input-btn ${isListening ? 'listening' : ''} ${error ? 'error' : ''}`}
           >
-            {isListening ? 'Listening...' : 'Voice Input'}
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 14 0h-2Zm-5 7a7 7 0 0 0 7-7h2a9 9 0 0 1-18 0h2a7 7 0 0 0 7 7Zm-1 3h2v2h-2v-2Z" />
+            </svg>
+            {isListening ? 'Listening…' : 'Voice input'}
           </button>
           {success && <div className="voice-success">{success}</div>}
           {transcript && <div className="voice-transcript">"{transcript}"</div>}
           {error && <div className="voice-error">{error}</div>}
         </div>
 
+        {formError && <div className="form-feedback error">{formError}</div>}
+        {formStatus && <div className="form-feedback success">{formStatus}</div>}
+
         <div className="form-actions">
           <button type="submit" className="btn-submit">
-            {editingItem ? 'Update Item' : 'Add Item'}
+            {editingItem ? 'Update item' : 'Add item'}
           </button>
           {editingItem && (
             <button type="button" onClick={resetForm} className="btn-cancel">
