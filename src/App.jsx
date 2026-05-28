@@ -1,29 +1,33 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import VoiceForm from './components/VoiceForm';
-import VoiceSearch from './components/VoiceSearch';
-import ItemList from './components/ItemList';
-import ChatWindow from './components/ChatWindow';
-import useLocalStorage from './hooks/useLocalStorage';
-import './App.css';
+import React, { useState, useCallback, useEffect } from "react";
+import VoiceForm from "./components/VoiceForm";
+import VoiceSearch from "./components/VoiceSearch";
+import ItemList from "./components/ItemList";
+import ChatWindow from "./components/ChatWindow";
+import useLocalStorage from "./hooks/useLocalStorage";
+import "./App.css";
 
 function App() {
-  const [items, setItems] = useLocalStorage('voiceCrudItems', []);
+  const [items, setItems] = useLocalStorage("voiceCrudItems", []);
   const [filteredItems, setFilteredItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notification, setNotification] = useState("");
 
-  const filterItems = useCallback((query) => {
-    const lowerQuery = query.toLowerCase();
+  const filterItems = useCallback(
+    (query) => {
+      const lowerQuery = query.toLowerCase();
 
-    const filtered = items.filter(
-      (item) =>
-        item.title.toLowerCase().includes(lowerQuery) ||
-        item.description?.toLowerCase().includes(lowerQuery)
-    );
+      const filtered = items.filter(
+        (item) =>
+          item.title.toLowerCase().includes(lowerQuery) ||
+          item.description?.toLowerCase().includes(lowerQuery),
+      );
 
-    setFilteredItems(filtered);
-    setSearchQuery(query);
-  }, [items]);
+      setFilteredItems(filtered);
+      setSearchQuery(query);
+    },
+    [items],
+  );
 
   useEffect(() => {
     if (searchQuery) {
@@ -33,6 +37,16 @@ function App() {
     }
   }, [items, searchQuery, filterItems]);
 
+  useEffect(() => {
+    if (!notification) return undefined;
+    const timer = window.setTimeout(() => setNotification(""), 3200);
+    return () => window.clearTimeout(timer);
+  }, [notification]);
+
+  const notify = (message) => {
+    setNotification(message);
+  };
+
   const handleAddItem = (itemData) => {
     const newItem = {
       id: Date.now(),
@@ -40,37 +54,33 @@ function App() {
     };
 
     setItems((prev) => [...prev, newItem]);
-
-    alert('Item added successfully!');
+    notify("Item added successfully.");
   };
 
   const handleUpdateItem = (updatedItem) => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === updatedItem.id ? updatedItem : item
-      )
+      prev.map((item) => (item.id === updatedItem.id ? updatedItem : item)),
     );
 
     setEditingItem(null);
-
-    alert('Item updated successfully!');
+    notify("Item updated successfully.");
   };
 
   const handleDeleteItem = (id, skipConfirm = false) => {
-    if (skipConfirm || window.confirm('Are you sure you want to delete this item?')) {
-      setItems((prev) =>
-        prev.filter((item) => item.id !== id)
-      );
+    if (
+      skipConfirm ||
+      window.confirm("Are you sure you want to delete this item?")
+    ) {
+      setItems((prev) => prev.filter((item) => item.id !== id));
+      notify("Item removed successfully.");
     }
   };
 
   const handleToggleItem = (id) => {
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id
-          ? { ...item, completed: !item.completed }
-          : item
-      )
+        item.id === id ? { ...item, completed: !item.completed } : item,
+      ),
     );
   };
 
@@ -82,26 +92,55 @@ function App() {
     setEditingItem(null);
   };
 
-  const handleSearch = useCallback((query) => {
-    filterItems(query);
-  }, [filterItems]);
+  const handleSearch = useCallback(
+    (query) => {
+      filterItems(query);
+    },
+    [filterItems],
+  );
 
   const handleClearSearch = () => {
-    filterItems('');
+    filterItems("");
+  };
+
+  const stats = {
+    total: items.length,
+    completed: items.filter((item) => item.completed).length,
+    active: items.filter((item) => !item.completed).length,
   };
 
   return (
-    <div className="app">
+    <div className="app-shell">
       <div className="app-content">
+        <header className="page-header">
+          <div className="page-intro">
+            <p className="eyebrow">Voice CRUD dashboard</p>
+            <h1>Manage items with clean voice and form workflows.</h1>
+            <p className="page-description">
+              A professional SaaS-style interface for task handling, search, and
+              voice command automation.
+            </p>
+          </div>
 
-        <header className="app-header">
-          <h1>Voice CRUD App</h1>
-          <p>Create, Read, Update, Delete with Voice Commands</p>
+          <div className="header-meta">
+            <span className="header-chip">{stats.total} items</span>
+            <span className="header-chip">{stats.active} active</span>
+            <span className="header-chip">{stats.completed} completed</span>
+          </div>
         </header>
 
-        <div className="main-container">
+        {notification && <div className="toast-banner">{notification}</div>}
 
-          <aside className="sidebar">
+        <section className="dashboard-grid">
+          <aside className="panel panel-sidebar">
+            <div className="panel-header">
+              <div>
+                <h2>Quick add</h2>
+                <p>
+                  Use the form or voice controls to add new items in seconds.
+                </p>
+              </div>
+            </div>
             <VoiceForm
               onAddItem={handleAddItem}
               onUpdateItem={handleUpdateItem}
@@ -110,26 +149,34 @@ function App() {
             />
           </aside>
 
-          <main className="content">
-
-            <div className="search-section">
-              <VoiceSearch onSearch={handleSearch} />
-
-              {searchQuery && (
-                <div className="search-info">
-                  <span>
-                    Showing {filteredItems.length} of {items.length} items
-                  </span>
-
-                  <button
-                    onClick={handleClearSearch}
-                    className="clear-search-btn"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
+          <main className="panel panel-main">
+            <div className="panel-header panel-header-split">
+              <div>
+                <h2>Item library</h2>
+                <p>
+                  Search, review, and update your current list with polished
+                  controls.
+                </p>
+              </div>
+              <div className="search-block">
+                <VoiceSearch onSearch={handleSearch} />
+              </div>
             </div>
+
+            {searchQuery && (
+              <div className="search-info-panel">
+                <span>
+                  Showing {filteredItems.length} of {items.length} items for “
+                  {searchQuery}”.
+                </span>
+                <button
+                  onClick={handleClearSearch}
+                  className="clear-search-btn"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
 
             <ItemList
               items={filteredItems}
@@ -137,25 +184,26 @@ function App() {
               onDelete={handleDeleteItem}
               onToggle={handleToggleItem}
             />
-
-            <footer className="app-footer">
-              <p>
-                Tip: Use voice commands to search and manage your items!
-              </p>
-            </footer>
-
           </main>
 
-          <aside className="chat-sidebar">
+          <aside
+            className="panel panel-chat"
+            style={{
+              backgroundColor: "#f9f9f900",
+              border: "none",
+              boxShadow: "none",
+            }}
+          >
             <ChatWindow
               items={items}
               onAddItem={handleAddItem}
-              onDeleteItem={(id) => handleDeleteItem(id, true)}
+              onDeleteItem={handleDeleteItem}
+              onUpdateItem={handleUpdateItem}
               onSearch={handleSearch}
               onClearSearch={handleClearSearch}
             />
           </aside>
-        </div>
+        </section>
       </div>
     </div>
   );
