@@ -115,11 +115,6 @@ function App() {
         <header className="page-header">
           <div className="page-intro">
             <p className="eyebrow">Voice CRUD dashboard</p>
-            <h1>Manage items with clean voice and form workflows.</h1>
-            <p className="page-description">
-              A professional SaaS-style interface for task handling, search, and
-              voice command automation.
-            </p>
           </div>
 
           <div className="header-meta">
