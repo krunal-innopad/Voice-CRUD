@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import VoiceForm from './components/VoiceForm';
 import VoiceSearch from './components/VoiceSearch';
 import ItemList from './components/ItemList';
+import ChatWindow from './components/ChatWindow';
 import useLocalStorage from './hooks/useLocalStorage';
 import './App.css';
 
@@ -55,8 +56,8 @@ function App() {
     alert('Item updated successfully!');
   };
 
-  const handleDeleteItem = (id) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
+  const handleDeleteItem = (id, skipConfirm = false) => {
+    if (skipConfirm || window.confirm('Are you sure you want to delete this item?')) {
       setItems((prev) =>
         prev.filter((item) => item.id !== id)
       );
@@ -144,6 +145,16 @@ function App() {
             </footer>
 
           </main>
+
+          <aside className="chat-sidebar">
+            <ChatWindow
+              items={items}
+              onAddItem={handleAddItem}
+              onDeleteItem={(id) => handleDeleteItem(id, true)}
+              onSearch={handleSearch}
+              onClearSearch={handleClearSearch}
+            />
+          </aside>
         </div>
       </div>
     </div>

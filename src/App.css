@@ -31,7 +31,7 @@
 
 .main-container {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1fr 2fr 1fr;
   gap: 30px;
   margin-bottom: 40px;
 }
@@ -39,6 +39,12 @@
 .sidebar {
   display: flex;
   justify-content: flex-start;
+}
+
+.chat-sidebar {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .content {
@@ -94,12 +100,27 @@
   font-size: 14px;
 }
 
+@media (max-width: 1200px) {
+  .main-container {
+    grid-template-columns: 1fr 2fr;
+  }
+
+  .chat-sidebar {
+    display: none;
+  }
+}
+
 @media (max-width: 1024px) {
   .main-container {
     grid-template-columns: 1fr;
   }
 
   .sidebar {
+    justify-content: center;
+  }
+
+  .chat-sidebar {
+    display: flex;
     justify-content: center;
   }
 }
